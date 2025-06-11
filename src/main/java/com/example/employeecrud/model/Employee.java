@@ -1,6 +1,7 @@
 package com.example.employeecrud.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 
 @Entity
 @Table(name = "employees")
@@ -9,13 +10,19 @@ public class Employee {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+    
+    @NotBlank(message = "First name is mandatory")
+    @Size(max = 100)
     @Column(name = "first_name", nullable = false)
     private String firstName;
-
+    
+    @NotBlank(message = "Last name is mandatory")
+    @Size(max=100)
     @Column(name = "last_name")
     private String lastName;
-
+    
+    @NotBlank(message = "Email is mandatory")
+    @Email(message = "Email should be valid")
     @Column(name = "email")
     private String email;
 

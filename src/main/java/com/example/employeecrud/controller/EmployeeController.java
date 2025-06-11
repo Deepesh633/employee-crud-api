@@ -1,70 +1,64 @@
 package com.example.employeecrud.controller;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import com.example.employeecrud.exception.ResourceNotFoundException;
 import com.example.employeecrud.model.Employee;
-import com.example.employeecrud.repository.EmployeeRepository;
+import com.example.employeecrud.services.EmployeeService;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.*;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/employees")
 public class EmployeeController {
 
     @Autowired
-    private EmployeeRepository employeeRepository;
+    private EmployeeService employeeService;
 
-    // Create a new employee
+    // CREATE
     @PostMapping
-    public ResponseEntity<Employee> createEmployee(@RequestBody Employee employee) {
-        Employee saved = employeeRepository.save(employee);
+    public ResponseEntity<Employee> createEmployee(@Valid @RequestBody Employee employee) {
+        Employee saved = employeeService.createEmployee(employee);
         return new ResponseEntity<>(saved, HttpStatus.CREATED);
     }
 
-    // Get all employees
+    // READ ALL
     @GetMapping
-    public List<Employee> getAllEmployees() {
-        return employeeRepository.findAll();
+    public ResponseEntity<List<Employee>> getAllEmployees() {
+        List<Employee> list = employeeService.getAllEmployees();
+        return list.isEmpty()
+                ? new ResponseEntity<>(HttpStatus.NO_CONTENT)
+                : new ResponseEntity<>(list, HttpStatus.OK);
     }
 
-    // Get employee by ID
+    // READ BY ID
     @GetMapping("/{id}")
     public ResponseEntity<Employee> getEmployeeById(@PathVariable Long id) {
-        return employeeRepository.findById(id)
-                .map(emp -> new ResponseEntity<>(emp, HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        Employee employee = employeeService.getEmployeeById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found for this id :: " + id));
+        return ResponseEntity.ok(employee);
     }
 
-    // Update employee
+    // UPDATE
     @PutMapping("/{id}")
-    public ResponseEntity<Employee> updateEmployee(@PathVariable Long id, @RequestBody Employee updatedEmployee) {
-        return employeeRepository.findById(id)
-                .map(employee -> {
-                    employee.setFirstName(updatedEmployee.getFirstName());
-                    employee.setLastName(updatedEmployee.getLastName());
-                    employee.setEmail(updatedEmployee.getEmail());
-                    Employee saved = employeeRepository.save(employee);
-                    return new ResponseEntity<>(saved, HttpStatus.OK);
-                }).orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    public ResponseEntity<Employee> updateEmployee(@PathVariable Long id, @Valid @RequestBody Employee updatedEmployee) {
+        Employee updated = employeeService.updateEmployee(id, updatedEmployee);
+        return new ResponseEntity<>(updated, HttpStatus.OK);
     }
 
-    // Delete employee
+    // DELETE
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteEmployee(@PathVariable Long id) {
-        return employeeRepository.findById(id)
-                .map(employee -> {
-                    employeeRepository.delete(employee);
-                    return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
-                }).orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        employeeService.deleteEmployee(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    // DELETE ALL (Optional)
+    @DeleteMapping
+    public ResponseEntity<Void> deleteAllEmployees() {
+        employeeService.deleteAllEmployees();
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }
