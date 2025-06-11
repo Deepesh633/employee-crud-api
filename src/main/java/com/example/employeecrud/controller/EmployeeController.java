@@ -55,7 +55,7 @@ public class EmployeeController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    // DELETE ALL (Optional)
+    // DELETE ALL 
     @DeleteMapping
     public ResponseEntity<Void> deleteAllEmployees() {
         employeeService.deleteAllEmployees();
